@@ -1,61 +1,94 @@
-using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 public class GridManager : MonoBehaviour
 {
-    public GameObject arrowPrefab;
-    public GameObject ballPrefab;
-    public Vector2 areaSize = new Vector2(10, 10);
-    public float cellSize = 2f;
-    public int minBalls = 2;
-    public int maxBalls = 5;
-    public float spacing = 0.3f;
+    public static GridManager Instance;
+    public GameObject headPrefab;
 
-    private bool[,] occupied;
 
+    public float axisLength = 1.0f; // 坐标轴长度
+    public LineRenderer lineRenderer;
+    public float maxDistance = 1.0f;
+
+    public int xMax = 10; // x轴最大整数坐标
+    public int yMax = 10; // y轴最大整数坐标
+    public int linesNum = 5;
+
+    public List<GridPoint> pointsLocation = new List<GridPoint>();
+    public List<Line> lines = new List<Line>();
     void Start()
     {
-        int cols = Mathf.FloorToInt(areaSize.x / cellSize);
-        int rows = Mathf.FloorToInt(areaSize.y / cellSize);
+        Instance = this;
+        GeneratePoints();
+        GenerateLines(linesNum);
+        // 设置 LineRenderer
+        DrawLines();
 
-        occupied = new bool[cols, rows];
+    }
 
-        Vector2 origin = (Vector2)transform.position - areaSize / 2f + Vector2.one * cellSize / 2f;
-
-        for (int x = 0; x < cols; x++)
+    void DrawLines()
+    {
+        foreach (Line line in lines)
         {
-            for (int y = 0; y < rows; y++)
-            {
-                if (occupied[x, y]) continue;
+            // 每条线新建一个 GameObject
+            int lineIndex = GridManager.Instance.lines.IndexOf(line);
 
-                Vector2 spawnPos = origin + new Vector2(x * cellSize, y * cellSize);
+            GameObject lineObj = new GameObject("Line");
+            lineObj.transform.parent = this.transform;
+            GameObject head = Instantiate(headPrefab, (Vector3)line.points[0], Quaternion.identity, lineObj.transform);
+            head.GetComponent<Head>().Init(line.direction,lineIndex);
 
-                // 生成箭头
-                GameObject arrowObj = Instantiate(arrowPrefab, spawnPos, Quaternion.identity, transform);
 
-                // 标记格子已占用
-                occupied[x, y] = true;
-
-                // 生成尾巴小球
-                int ballCount = Random.Range(minBalls, maxBalls + 1);
-                Vector2 dir = arrowObj.GetComponent<Arrow>().dir;
-
-                Vector2 lastPos = spawnPos;
-                for (int i = 0; i < ballCount; i++)
-                {
-                    lastPos -= dir * spacing;  // 向箭头相反方向生成小球
-                    GameObject ball = Instantiate(ballPrefab, lastPos, Quaternion.identity, transform);
-                    // 这里可以不占用格子，或者根据网格规则占用
-                }
-            }
         }
     }
 
-    private void OnDrawGizmosSelected()
+    void GenerateLines(int num)
     {
+        for(int i = 0; i < num; i++)
+        {
+            Line line = new Line();
+            lines.Add(line);
+        }
+    }
+    void GeneratePoints()
+    {
+        pointsLocation.Clear(); // 清空列表，防止重复添加
+
+        for (int x = -xMax; x <= xMax; x++)
+        {
+            for (int y = -yMax; y <= yMax; y++)
+            {
+                pointsLocation.Add(new GridPoint(new Vector2(x, y)));
+            }
+        }
+    }
+    void OnDrawGizmos()
+    {
+        // 绘制X轴（红色）
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(transform.position, transform.position + Vector3.right * axisLength);
+
+        // 绘制Y轴（绿色）
         Gizmos.color = Color.green;
-        Gizmos.DrawWireCube(transform.position, new Vector3(areaSize.x, areaSize.y, 0));
+        Gizmos.DrawLine(transform.position, transform.position + Vector3.up * axisLength);
+
+        // 绘制Z轴（蓝色）
+        Gizmos.color = Color.blue;
+        Gizmos.DrawLine(transform.position, transform.position + Vector3.forward * axisLength);
     }
 }
 
+[System.Serializable]
+public class GridPoint
+{
+    public Vector2 position; // 坐标
+    public bool occupied;    // 是否被占据
+
+    public GridPoint(Vector2 pos)
+    {
+        position = pos;
+        occupied = false; // 默认未占据
+    }
+}
