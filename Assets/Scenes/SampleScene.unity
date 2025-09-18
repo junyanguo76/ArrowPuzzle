@@ -325,9 +325,9 @@ MonoBehaviour:
   axisLength: 10
   lineRenderer: {fileID: 0}
   maxDistance: 1
-  xMax: 5
-  yMax: 5
-  linesNum: 5
+  xMax: 4
+  yMax: 4
+  linesNum: 15
   pointsLocation: []
 --- !u!4 &1826217116
 Transform:

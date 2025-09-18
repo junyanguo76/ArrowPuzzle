@@ -26,14 +26,24 @@ public class Head : MonoBehaviour
 
         SetupEdgeCollider();
 
+        // 添加 LineRenderer
         LineRenderer lr = gameObject.AddComponent<LineRenderer>();
         lr.startWidth = 0.1f;
         lr.endWidth = 0.1f;
         lr.material = new Material(Shader.Find("Sprites/Default"));
-        lr.positionCount = 2;
 
-        lr.SetPosition(0, (Vector3)GridManager.Instance.lines[index].points[0]);
-        lr.SetPosition(1, (Vector3)GridManager.Instance.lines[index].points[1]);
+        // 获取 Line 对应的点列表
+        List<Vector2> points = GridManager.Instance.lines[index].points;
+
+        // 设置 LineRenderer 点数
+        lr.positionCount = points.Count;
+
+        // 遍历赋值
+        for (int i = 0; i < points.Count; i++)
+        {
+            lr.SetPosition(i, (Vector3)points[i]);
+        }
+
     }
     private void OnMouseDown()
     {

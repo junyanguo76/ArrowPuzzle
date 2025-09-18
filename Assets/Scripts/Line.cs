@@ -15,6 +15,7 @@ public class Line
     public Line()
     {
         CreateFirstPoint();
+        CreateSecondPoint();
         CreateNextPoint();
 
     }
@@ -40,11 +41,47 @@ public class Line
 
     void CreateNextPoint()
     {
+        Vector2 p1 = points[^1]; // C# 8.0 语法，最后一个元素
+        Vector2 p2 = points[^2];
+        Vector2 p3;
+
+        if (Random.value <= 0.9f) // 9/10 概率
+        {
+            p3 = p1 + p1 - p2;
+        }
+        else
+        {
+            if (p1.x - p2.x == 0) // 垂直方向
+            {
+                p3 = p1 + (Random.value < 0.5f ? Vector2.up : Vector2.down);
+            }
+            else // 水平方向
+            {
+                p3 = p1 + (Random.value < 0.5f ? Vector2.right : Vector2.left);
+            }
+        }
+
+        CheckPointPosition(p3);
+    }
+
+    void CheckPointPosition(Vector2 p3)
+    {
+        var gridPoint = GridManager.Instance.pointsLocation.Find(p => p.position == p3);
+        if (gridPoint != null && !gridPoint.occupied)
+        {
+            points.Add(p3);
+            gridPoint.occupied = true;
+        }
+    }
+
+    void CreateSecondPoint()
+    {
         Vector2 p1 = points[0]; // 上一条点
         RandomDirection();
         direction = DirectionCheck(direction, p1);
         Vector2 p2 = p1 - direction;
         points.Add(p2);
+        CheckPointPosition(p2);
     }
 
     Vector2 DirectionCheck(Vector2 direction, Vector2 currentPoint)
